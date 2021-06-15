@@ -101,8 +101,12 @@ class Abstractor(discord.Client):
         ffn_links = FFN_MATCH.finditer(content)
         for link in ffn_links:
             # Standardize link format
-            link = link.group(0).replace("http://", "https://")\
-                .replace("m.", "www.")
+            if "m.fanfiction.net" in link.group(0):
+                mobile = True
+            else:
+                mobile = False
+            link = link.group(0).replace(
+                "http://", "https://").replace("m.", "www.")
             link = link.replace(
                 "https://fanfiction.net", "https://www.fanfiction.net")
             if not link.startswith("https://"):
@@ -117,9 +121,11 @@ class Abstractor(discord.Client):
             async with message.channel.typing():
                 try:
                     output = parser.generate_ffn_work_summary(link)
-                # Ignore cloudflare errors, we can't do anything about them
+                # We can't resolve cloudflare errors
+                # but if the link was a mobile link, send the normal one
                 except cloudscraper.exceptions.CloudflareException:
-                    pass
+                    if mobile:
+                        output = link
                 except Exception:
                     print(link)
                     traceback.print_exc()
