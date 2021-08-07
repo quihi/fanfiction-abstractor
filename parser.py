@@ -223,7 +223,7 @@ def identify_work_in_ao3_series(link, number):
 
 
 def generate_ffn_work_summary(link):
-    """Do something.
+    """Generate summary of FFN work.
 
     link should be a link to an FFN fic
     Returns the message with the fic info, or else a blank string
