@@ -6,10 +6,14 @@ This class contains the bot's handling of discord events.
 import cloudscraper
 import config
 import discord
+import logging
 import messages
 import parser
 import re
 import traceback
+
+# Import the logger from another file
+logger = logging.getLogger('discord')
 
 # The regular expressions to identify AO3 and FFN links.
 # Note there may be an extra character at the beginning, due to checking
@@ -25,22 +29,24 @@ class Abstractor(discord.Client):
 
     async def on_ready(self):
         """When starting bot, print the servers it is part of."""
-        print("Logged on!\nMember of:")
+        s = "Logged on!\nMember of:\n"
         for guild in self.guilds:
             owner = await self.fetch_user(guild.owner_id)
-            print(guild.id, guild.name, owner, guild.owner_id, sep="\t")
+            s += "{}\t{}\t{}\t{}\n".format(
+                guild.id, guild.name, owner, guild.owner_id)
+        logger.info(s)
 
     async def on_guild_join(self, guild):
         """Print a message when the bot is added to a server."""
-        print("Joined a new guild!")
+        s = "Joined a new guild!\n"
         owner = await self.fetch_user(guild.owner_id)
-        print(guild.id, guild.name, owner, guild.owner_id, sep="\t")
+        s = "\t".join((guild.id, guild.name, owner, guild.owner_id))
 
     async def on_guild_remove(self, guild):
         """Print a message when the bot is removed a server."""
-        print("Removed from a guild.")
+        s = "Removed from a guild."
         owner = await self.fetch_user(guild.owner_id)
-        print(guild.id, guild.name, owner, guild.owner_id, sep="\t")
+        s = "\t".join((guild.id, guild.name, owner, guild.owner_id))
 
     async def on_message(self, message):
         """Parse messages and respond if they contain a fanfiction link."""
@@ -62,7 +68,13 @@ class Abstractor(discord.Client):
         # check for AO3 links
         ao3_links = AO3_MATCH.finditer(content)
         links_processed = set()
+        max_links = 1
+        num_processed = 0
         for link in ao3_links:
+            if num_processed >= max_links:
+                break
+            else:
+                num_processed += 1
             # clean up link
             link = link.group(0).replace("http://", "https://")\
                 .replace("www.", "")
@@ -91,15 +103,17 @@ class Abstractor(discord.Client):
                         output = parser.generate_ao3_series_summary(link)
                 # if the process fails for an unhandled reason, print error
                 except Exception:
-                    print(link)
-                    traceback.print_exc()
-                    output = messages.ERROR_MESSAGE.format(link, config.name)
+                    logger.exception("Failed to get AO3 summary")
             if len(output) > 0:
                 await message.channel.send(output)
 
         # Check for FFN links
         ffn_links = FFN_MATCH.finditer(content)
         for link in ffn_links:
+            if num_processed >= max_links:
+                break
+            else:
+                num_processed += 1
             # Standardize link format
             if "m.fanfiction.net" in link.group(0):
                 mobile = True
@@ -127,9 +141,7 @@ class Abstractor(discord.Client):
                     if mobile:
                         output = link
                 except Exception:
-                    print(link)
-                    traceback.print_exc()
-                    output = messages.ERROR_MESSAGE.format(link, config.name)
+                    logger.exception("Failed to get FFN summary")
             if len(output) > 0:
                 await message.channel.send(output)
 
@@ -167,8 +179,6 @@ class Abstractor(discord.Client):
                 try:
                     output = parser.generate_ao3_work_summary(link)
                 except Exception:
-                    print(link)
-                    traceback.print_exc()
-                    output = messages.ERROR_MESSAGE.format(link, config.name)
+                    logger.exception("Failed to generate summary for work in series")
             if len(output) > 0:
                 await reaction.message.channel.send(output)

@@ -28,7 +28,7 @@ def main():
     logger = logging.getLogger('discord')
     logger.setLevel(logging.INFO)
     handler = logging.FileHandler(
-        filename='discord.log', encoding='utf-8', mode='w')
+        filename='discord.log', encoding='utf-8', mode='a')
     handler.setFormatter(logging.Formatter(
         '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
@@ -36,9 +36,10 @@ def main():
     # create discord client
     intents = discord.Intents(messages=True, reactions=True, guilds=True)
     activity = discord.Activity(
-        name='@Fanfiction Abstractor help | https://github.com/quihi/fanfiction-abstractor',
+        name='@me help',
         type=discord.ActivityType.playing)
-    description = "Posts information about fanfiction.  Contact {} for details."\
+    description = "Posts information about fanfiction.  Contact {} for details.\
+    \nhttps://github.com/quihi/fanfiction-abstractor"\
         .format(config.name)
     client = abstractor.Abstractor(
         intents=intents, activity=activity, description=description)
@@ -53,7 +54,13 @@ if __name__ == '__main__':
 
 """
 TODO:
-- probably refactor somehow
+- add way more configuration
+  - limit summary length, how many blurbs are posted, etc.
+- use sqlite or at least pickling for configuration
+- handle external bookmarks
+- change characters to additional characters
+- potentially add comma at end of tag lists before ellipsis
+- flip to make weird stuff opt-in
 - switch to aiohttp library
 - something with what chapter is linked?
 - add bookmark count for series?
