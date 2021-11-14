@@ -84,7 +84,7 @@ def generate_ao3_work_summary(link):
     if fandoms:
         fandoms = list(map(lambda x: x.string, fandoms.find_all("a")))
         if len(fandoms) > 5:
-            fandoms = ", ".join(fandoms[:5]) + "…"
+            fandoms = ", ".join(fandoms[:5]) + ", …"
         else:
             fandoms = ", ".join(fandoms)
     output += "**Fandoms:** {}\n".format(fandoms)
@@ -101,22 +101,49 @@ def generate_ao3_work_summary(link):
     if relationships:
         relationships = list(map(
             lambda x: x.string, relationships.find_all("a")))
-        if len(relationships) > 2:
-            relationships = ", ".join(relationships[:2]) + "…"
+        relationship_list = relationships
+        if len(relationships) > 3:
+            relationships = ", ".join(relationships[:3]) + ", …"
         else:
             relationships = ", ".join(relationships)
         output += "**Relationships:** {}\n".format(relationships)
+
     if characters:
         characters = list(map(lambda x: x.string, characters.find_all("a")))
+        # do not list characters already listed in relationships
+        if relationships:
+            already_listed = set()
+            for r in relationship_list[:3]:
+                r = r.replace(" & ", "/")
+                r = r.split("/")
+                for c in r:
+                    if " (" in c:
+                        c = c.split(" (")[0]
+                    already_listed.add(c)
+            chars_static = characters.copy()
+            for c in chars_static:
+                before = c
+                if " (" in c:
+                    c = c.split(" (")[0]
+                if " - " in c:
+                    c = c.split(" - ")[0]
+                if c in already_listed:
+                    characters.remove(before)
+
         if len(characters) > 3:
-            characters = ", ".join(characters[:3]) + "…"
+            characters = ", ".join(characters[:3]) + ", …"
         else:
             characters = ", ".join(characters)
-        output += "**Characters:** {}\n".format(characters)
+        if len(characters) > 0:
+            if relationships:
+                output += "**Additional Characters:** {}\n".format(characters)
+            else:
+                output += "**Characters:** {}\n".format(characters)
+
     if freeform:
         freeform = list(map(lambda x: x.string, freeform.find_all("a")))
         if len(freeform) > 5:
-            freeform = ", ".join(freeform[:5]) + "…"
+            freeform = ", ".join(freeform[:5]) + ", …"
         else:
             freeform = ", ".join(freeform)
         output += "**Tags:** {}\n".format(freeform)
@@ -348,5 +375,7 @@ def format_html(field):
     result = list(map(lambda x: x.text.strip(), field))
     result = "\n\n".join(result)
     if len(result) > 250:
-        result = result[:250] + "…"
+        result = result[:250].strip() + "…"
+        # i = result.rfind(" ")
+        # result = result[:i] + "…"
     return result
