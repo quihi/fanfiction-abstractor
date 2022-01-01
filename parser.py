@@ -374,6 +374,10 @@ def format_html(field):
     field = field.blockquote.find_all("p")
     result = list(map(lambda x: x.text.strip(), field))
     result = "\n\n".join(result)
+    while "\n\n\n\n" in result:
+        result = result.replace("\n\n\n\n", "\n\n")
+    if result.count("\n\n") > 3:
+        result = "\n\n".join(result.split("\n\n")[:3])
     if len(result) > 250:
         result = result[:250].strip() + "…"
         # i = result.rfind(" ")

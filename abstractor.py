@@ -19,10 +19,11 @@ logger = logging.getLogger('discord')
 # Note there may be an extra character at the beginning, due to checking
 # the previous character to verify it is not ! (which would not match)
 AO3_MATCH = re.compile(
-    "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown.org(\\/collections\\/\\w+)?\\/(works|series)\\/\\d+")
+    "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown\\.org(\\/collections\\/\\w+)?\\/(works|series)\\/\\d+")
 FFN_MATCH = re.compile(
-    "(^|[^!])https?:\\/\\/(www\\.|m.)?fanfiction.net\\/s\\/\\d+")
-
+    "(^|[^!])https?:\\/\\/(www\\.|m.)?fanfiction\\.net\\/s\\/\\d+")
+CF_REGEX = re.compile(
+    "(^|[^!])https?:\\/\\/(www\\.|m\\.)?fanfiction\\.net\\/s\\/\\d+(\\/\\d+)?(\\/[\\w-]+)?(\\?[\\w=.-]+)")
 
 class Abstractor(discord.Client):
     """The discord bot client itself."""
@@ -140,6 +141,9 @@ class Abstractor(discord.Client):
                 except cloudscraper.exceptions.CloudflareException:
                     if mobile:
                         output = link
+                    else:
+                        # check for cloudflare nonsense, not implemented
+                        fic_id = link.replace("https://www.fanfiction.net/s/")
                 except Exception:
                     logger.exception("Failed to get FFN summary")
             if len(output) > 0:
