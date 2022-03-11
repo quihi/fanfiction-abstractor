@@ -75,7 +75,7 @@ def generate_ao3_work_summary(link):
 
     output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
     if series:
-        series = series.find_all(class_="position")[:5]
+        series = series.find_all(class_="position")[:2]
         for s in series:
             s_name = s.text.split()
             s = "**Part {}** of the **{}** series (<https://archiveofourown.org{}>)\n"\
@@ -374,12 +374,14 @@ def format_html(field):
     field = field.blockquote.find_all("p")
     result = list(map(lambda x: x.text.strip(), field))
     result = "\n\n".join(result)
-    while "\n\n\n\n" in result:
-        result = result.replace("\n\n\n\n", "\n\n")
-    if result.count("\n\n") > 3:
+    result = result.strip()
+    while "\n\n\n" in result:
+        result = result.replace("\n\n\n", "\n\n")
+    if result.count("\n\n") > 2:
         result = "\n\n".join(result.split("\n\n")[:3])
     if len(result) > 250:
-        result = result[:250].strip() + "…"
+        result = result[:250].strip()
         # i = result.rfind(" ")
-        # result = result[:i] + "…"
+        # result = result[:i]
+        result += "…"
     return result

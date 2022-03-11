@@ -19,11 +19,10 @@ logger = logging.getLogger('discord')
 # Note there may be an extra character at the beginning, due to checking
 # the previous character to verify it is not ! (which would not match)
 AO3_MATCH = re.compile(
-    "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown\\.org(\\/collections\\/\\w+)?\\/(works|series)\\/\\d+")
+    "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown.org(\\/collections\\/\\w+)?\\/(works|series)\\/\\d+")
 FFN_MATCH = re.compile(
-    "(^|[^!])https?:\\/\\/(www\\.|m.)?fanfiction\\.net\\/s\\/\\d+")
-CF_REGEX = re.compile(
-    "(^|[^!])https?:\\/\\/(www\\.|m\\.)?fanfiction\\.net\\/s\\/\\d+(\\/\\d+)?(\\/[\\w-]+)?(\\?[\\w=.-]+)")
+    "(^|[^!])https?:\\/\\/(www\\.|m.)?fanfiction.net\\/s\\/\\d+(\\/\\d+)?(\\/\\?__cf_)?")
+
 
 class Abstractor(discord.Client):
     """The discord bot client itself."""
@@ -120,12 +119,16 @@ class Abstractor(discord.Client):
                 mobile = True
             else:
                 mobile = False
+            if link.group(0).endswith("__cf_"):
+                mobile = True
             link = link.group(0).replace(
                 "http://", "https://").replace("m.", "www.")
             link = link.replace(
                 "https://fanfiction.net", "https://www.fanfiction.net")
             if not link.startswith("https://"):
                 link = link[1:]
+            if link.endswith("__cf_"):
+                link = link[:-6]
             # If a fic is linked multiple times, only send one message
             if link in links_processed:
                 continue
@@ -141,9 +144,6 @@ class Abstractor(discord.Client):
                 except cloudscraper.exceptions.CloudflareException:
                     if mobile:
                         output = link
-                    else:
-                        # check for cloudflare nonsense, not implemented
-                        fic_id = link.replace("https://www.fanfiction.net/s/")
                 except Exception:
                     logger.exception("Failed to get FFN summary")
             if len(output) > 0:

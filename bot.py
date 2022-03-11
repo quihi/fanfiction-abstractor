@@ -39,7 +39,7 @@ def main():
         name='@me help',
         type=discord.ActivityType.playing)
     description = "Posts information about fanfiction.  Contact {} for details.\
-    https://github.com/quihi/fanfiction-abstractor"\
+    \nhttps://github.com/quihi/fanfiction-abstractor"\
         .format(config.name)
     client = abstractor.Abstractor(
         intents=intents, activity=activity, description=description)
