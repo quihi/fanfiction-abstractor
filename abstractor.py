@@ -141,6 +141,7 @@ class Abstractor(discord.Client):
                     output = parser.generate_ffn_work_summary(link)
                 # We can't resolve cloudflare errors
                 # but if the link was a mobile link, send the normal one
+                # should no longer happen with ficlab API
                 except cloudscraper.exceptions.CloudflareException:
                     if mobile:
                         output = link

@@ -2,6 +2,8 @@
 
 from bs4 import BeautifulSoup
 import cloudscraper
+import config
+import json
 import re
 import requests
 
@@ -255,85 +257,49 @@ def generate_ffn_work_summary(link):
     link should be a link to an FFN fic
     Returns the message with the fic info, or else a blank string
     """
-    r = scraper.get(link)
+
+    fichub_link = "https://fichub.net/api/v0/epub?q=" + link
+    MY_HEADER = {"User-Agent": config.name}
+    r = requests.get(fichub_link, headers=MY_HEADER)
     if r.status_code != requests.codes.ok:
         return None
-    soup = BeautifulSoup(r.text, "lxml")
+    metadata = json.loads(r.text)["meta"]
 
-    # collect story data from page
-    fandoms = soup.find(id="pre_story_links").span
-    if fandoms.img:
-        # is crossover
-        fandoms = fandoms.a.string.replace(" Crossover", "").replace(" +", ",")
-    else:
-        # is not crossover
-        fandoms = fandoms.a.find_next_sibling("a").string
+    title = metadata["title"]
+    author = metadata["author"]
+    summary = metadata["description"].strip("<p>").strip("</p>")
+    complete = metadata["status"]
+    chapters = metadata["chapters"]
+    words = metadata["words"]
+    updated = metadata["updated"].replace("T", " ")
 
-    profile = soup.find(id="profile_top")
-    title = profile.b.string
-    next_field = profile.a
-    author = next_field.string
-    next_field = next_field.find_next_sibling("div")
-    summary = next_field.string
-    next_field = next_field.find_next_sibling("span")
-
-    stats = next_field.text.split(" - ")
-    rating = stats[0].replace("Rated: Fiction ", "")
+    stats = metadata["extraMeta"].split(" - ")
     # next field varies.  have fun identifying it!
-    # order: rating, language, genre, characters, chapters, words,
-    #     reviews, favs, follows, updated, published, status, id
+    # it's much easier using ficlab's data.
+    # order: rating, language, genre, characters, ~chapters, words,~~
+    #     reviews, favs, follows, ~~updated, published, status, id~~
     genre = None
     characters = None
-    updated = None
-    index = 2
-    field = stats[index]
-    if field in FFN_GENRES:
-        genre = field
-        index += 1; field = stats[index]
-    if "Chapters: " not in field and "Words: " not in field:
-        characters = field
-        index += 1; field = stats[index]
-    if "Chapters: " in field:
-        chapters = field.replace("Chapters: ", "")
-        index += 1; field = stats[index]
-    else:
-        chapters = 1
-    if "Words: " in field:
-        words = field.replace("Words: ", "")
-        index += 1; field = stats[index]
-    else:
-        print("Error: This is not the words field")
-    if "Reviews: " in field:
-        reviews = field.replace("Reviews: ", "")
-        index += 1; field = stats[index]
-    else:
-        reviews = 0
-    if "Favs: " in field:
-        favs = field.replace("Favs: ", "")
-        index += 1; field = stats[index]
-    else:
-        favs = 0
-    if "Follows: " in field:
-        follows = field.replace("Follows: ", "")
-        index += 1; field = stats[index]
-    else:
-        follows = 0
-    if "Updated: " in field:
-        updated = field.replace("Updated: ", "")
-        index += 1; field = stats[index]
-    if "Published: " in field:
-        if updated is None:
-            updated = field.replace("Published: ", "")
-        index += 1; field = stats[index]
-    else:
-        print("Error: This is not the published date field")
-    if "Status: Complete" in field:
-        complete = True
-    else:
-        complete = False
+    reviews = 0
+    favs = 0
+    follows = 0
+
+    for field in stats:
+        if "Rated: " in field:
+            rating = field.replace("Rated: Fiction ", "")
+        if "Genre: " in field:
+            genre = field.replace("Genre: ", "")
+        if "Characters: " in field:
+            characters = field.replace("Characters: ", "")
+        if "Reviews: " in field:
+            reviews = field.replace("Reviews: ", "")
+        if "Favs: " in field:
+            favs = field.replace("Favs: ", "")
+        if "Follows: " in field:
+            follows = field.replace("Follows: ", "")
 
     output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
-    output += "**Fandoms:** {}\n".format(fandoms)
+    # output += "**Fandoms:** {}\n".format(fandoms)
     if genre:
         output += "**Rating:** {}          **Genre:** {}\n".format(rating, genre)
     else:
@@ -344,7 +310,7 @@ def generate_ffn_work_summary(link):
         output += "**Summary:** {}\n".format(summary)
     # output += "**Reviews:** {} **Favs:** {} **Follows:** {}\n".format(\
     #     reviews, favs, follows)
-    if complete:
+    if complete == "complete":
         chapters = str(chapters) + "/" + str(chapters)
     else:
         chapters = str(chapters) + "/?"
