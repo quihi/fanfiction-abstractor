@@ -22,6 +22,8 @@ AO3_MATCH = re.compile(
     "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown.org(\\/collections\\/\\w+)?\\/(works|series)\\/\\d+")
 FFN_MATCH = re.compile(
     "(^|[^!])https?:\\/\\/(www\\.|m.)?fanfiction.net\\/s\\/\\d+(\\/\\d+)?(\\/\\?__cf_)?")
+SB_MATCH = re.compile(
+    "(^|[^!])https?:\\/\\/forums.spacebattles.com\\/threads\\/[-\\.\\w\\d]+\\/")
 
 
 class Abstractor(discord.Client):
@@ -107,6 +109,7 @@ class Abstractor(discord.Client):
             if len(output) > 0:
                 await message.channel.send(output)
 
+
         # Check for FFN links
         ffn_links = FFN_MATCH.finditer(content)
         for link in ffn_links:
@@ -150,12 +153,43 @@ class Abstractor(discord.Client):
             if len(output) > 0:
                 await message.channel.send(output)
 
+
+        # spacebattles!
+        sb_links = SB_MATCH.finditer(content)
+        for link in sb_links:
+            if num_processed >= max_links:
+                break
+            else:
+                num_processed += 1
+            # clean up link
+            link = link.group(0).replace("http://", "https://")
+            # regex match may include an extra character at the start
+            if not link.startswith("https://"):
+                link = link[1:]
+            # do not link a fic more than once per message
+            if link in links_processed:
+                continue
+            links_processed.add(link)
+
+            # Attempt to get summary of AO3 work or series
+            output = ""
+            async with message.channel.typing():
+                try:
+                    output = parser.generate_sb_summary(link)
+                # if the process fails for an unhandled reason, print error
+                except Exception:
+                    logger.exception("Failed to get SpaceBattles summary")
+            if len(output) > 0:
+                await message.channel.send(output)
+
+
         # if a bot message is replied to with "delete", delete the message
         if message.guild.id not in config.servers_no_deletion:
             if message.reference and message.reference.resolved:
                 if message.reference.resolved.author == self.user:
                     if message.content == "delete":
                         await message.reference.resolved.delete()
+
 
     async def on_reaction_add(self, reaction, user):
         """If react is added to bot's series message, send work information.

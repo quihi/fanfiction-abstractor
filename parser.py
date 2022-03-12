@@ -320,6 +320,42 @@ def generate_ffn_work_summary(link):
     return output
 
 
+def generate_sb_summary(link):
+    """Generate summary of SpaceBattles work.
+
+    link should be a link to a spacebattles fic
+    Returns the message with the fic info, or else a blank string
+    """
+
+    fichub_link = "https://fichub.net/api/v0/epub?q=" + link
+    MY_HEADER = {"User-Agent": config.name}
+    r = requests.get(fichub_link, headers=MY_HEADER)
+    if r.status_code != requests.codes.ok:
+        return None
+    metadata = json.loads(r.text)["meta"]
+
+    title = metadata["title"]
+    author = metadata["author"]
+    summary = metadata["description"].strip("<p>").strip("</p>")
+    complete = metadata["status"]
+    chapters = metadata["chapters"]
+    words = metadata["words"]
+    updated = metadata["updated"].replace("T", " ")
+
+    output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
+    if summary:
+        output += "**Summary:** {}\n".format(summary)
+    if complete == "complete":
+        chapters = str(chapters) + "/" + str(chapters)
+    else:
+        chapters = str(chapters) + "/?"
+    output += "**Words:** {} **Chapters:** {} **Updated:** {}".format(
+        words, chapters, updated)
+
+    return output
+
+
+
 def format_html(field):
     """Format an HTML segment for discord markdown.
 
