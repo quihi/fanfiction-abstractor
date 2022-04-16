@@ -41,6 +41,12 @@ def generate_ao3_work_summary(link):
         return ""
     soup = BeautifulSoup(r.text, "lxml")
 
+    # if chapter link, replace with work link
+    if "/chapters/" in link:
+        share = soup.find(class_="share")
+        work_id = share.a["href"].strip("/works/").strip("/share")
+        link = "https://archiveofourown.org/works/{}".format(work_id)
+
     preface = soup.find(class_="preface group")
     title = preface.h2.string.strip()
     author = preface.h3.string

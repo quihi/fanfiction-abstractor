@@ -19,7 +19,7 @@ logger = logging.getLogger('discord')
 # Note there may be an extra character at the beginning, due to checking
 # the previous character to verify it is not ! (which would not match)
 AO3_MATCH = re.compile(
-    "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown.org(\\/collections\\/\\w+)?\\/(works|series)\\/\\d+")
+    "(^|[^!])https?:\\/\\/(www\\.)?archiveofourown.org(\\/collections\\/\\w+)?\\/(works|series|chapters)\\/\\d+")
 FFN_MATCH = re.compile(
     "(^|[^!])https?:\\/\\/(www\\.|m.)?fanfiction.net\\/s\\/\\d+(\\/\\d+)?(\\/\\?__cf_)?")
 SB_MATCH = re.compile(
@@ -103,6 +103,8 @@ class Abstractor(discord.Client):
                         output = parser.generate_ao3_work_summary(link)
                     elif "/series/" in link:
                         output = parser.generate_ao3_series_summary(link)
+                    elif "/chapters/" in link:
+                        output = parser.generate_ao3_work_summary(link)
                 # if the process fails for an unhandled reason, print error
                 except Exception:
                     logger.exception("Failed to get AO3 summary")
