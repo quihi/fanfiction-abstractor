@@ -66,4 +66,5 @@ TODO:
 - add bookmark count for series?
 - add more info on series (fandoms, tags, etc. off author page)
   - test Lomonaaeren for that
+- ignore all bots unless explicitly allowed
 """

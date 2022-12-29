@@ -70,7 +70,7 @@ class Abstractor(discord.Client):
         # check for AO3 links
         ao3_links = AO3_MATCH.finditer(content)
         links_processed = set()
-        max_links = 1
+        max_links = 3
         num_processed = 0
         for link in ao3_links:
             if num_processed >= max_links:
@@ -83,9 +83,6 @@ class Abstractor(discord.Client):
             # regex match may include an extra character at the start
             if not link.startswith("https://"):
                 link = link[1:]
-            # do not link a fic more than once per message
-            if link in links_processed:
-                continue
             # Strip "collection from URL before checking for duplicate links.
             base_link = link
             if "/collections/" in base_link:
@@ -93,7 +90,11 @@ class Abstractor(discord.Client):
                 base_link.pop(3)
                 base_link.pop(3)
                 base_link = "/".join(base_link)
+            # do not link a fic more than once per message
+            if base_link in links_processed:
+                continue
             links_processed.add(base_link)
+            add_blank_line = num_processed > 1
 
             # Attempt to get summary of AO3 work or series
             output = ""
@@ -107,8 +108,10 @@ class Abstractor(discord.Client):
                         output = parser.generate_ao3_work_summary(link)
                 # if the process fails for an unhandled reason, print error
                 except Exception:
-                    logger.exception("Failed to get AO3 summary")
+                    logger.exception("Failed to get AO3 summary for {}".format(base_link))
             if len(output) > 0:
+                if num_processed > 1:
+                    output = "** **\n" + output
                 await message.channel.send(output)
 
 
@@ -153,6 +156,8 @@ class Abstractor(discord.Client):
                 except Exception:
                     logger.exception("Failed to get FFN summary")
             if len(output) > 0:
+                if num_processed > 1:
+                    output = "** **\n" + output
                 await message.channel.send(output)
 
 
@@ -173,7 +178,7 @@ class Abstractor(discord.Client):
                 continue
             links_processed.add(link)
 
-            # Attempt to get summary of AO3 work or series
+            # Attempt to get summary of SB work
             output = ""
             async with message.channel.typing():
                 try:

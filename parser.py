@@ -1,7 +1,8 @@
 """parser.py downloads, parses, and creates messages from FFN and AO3 pages."""
 
 from bs4 import BeautifulSoup
-import cloudscraper
+import AO3
+# import cloudscraper
 import config
 import json
 import re
@@ -10,8 +11,8 @@ import requests
 HEADERS = {"User-Agent": "fanfiction-abstractor-bot"}
 FFN_GENRES = set()
 # create scraper to bypass cloudflare, always download desktop pages
-options = {"desktop": True, "browser": "firefox", "platform": "linux"}
-scraper = cloudscraper.create_scraper(browser=options)
+# options = {"desktop": True, "browser": "firefox", "platform": "linux"}
+# scraper = cloudscraper.create_scraper(browser=options)
 
 # generate set of possible FFN genres
 genres_list = ["Adventure", "Angst", "Crime", "Drama", "Family", "Fantasy",
@@ -37,9 +38,13 @@ def generate_ao3_work_summary(link):
     r = requests.get(link, headers=HEADERS)
     if r.status_code != requests.codes.ok:
         return ""
-    if r.url == "https://archiveofourown.org/users/login?restricted=true":
-        return ""
     soup = BeautifulSoup(r.text, "lxml")
+    if r.url == "https://archiveofourown.org/users/login?restricted=true":
+        ao3_session = AO3.Session(config.AO3_USERNAME, config.AO3_PASSWORD)
+        soup = ao3_session.request(link)
+        locked_fic = True
+    else:
+        locked_fic = False
 
     # if chapter link, replace with work link
     if "/chapters/" in link:
@@ -81,13 +86,22 @@ def generate_ao3_work_summary(link):
     else:
         updated = tags.find("dd", class_="published").string
 
-    output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
+    if not locked_fic:
+        output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
+    else:
+        output = ":lock: **{}** (<{}>) by **{}**\n".format(title, link, author)
+        # AO3 has updated how they format series names now! I think they've
+        # become consistent, but this handles both fairly well.
     if series:
         series = series.find_all(class_="position")[:2]
         for s in series:
             s_name = s.text.split()
-            s = "**Part {}** of the **{}** series (<https://archiveofourown.org{}>)\n"\
-                .format(s_name[1], " ".join(s_name[4:-1]), s.a["href"])
+            if s_name[3] == "the" and s_name[-1] == "series":
+                s = "**Part {}** of the **{}** series (<https://archiveofourown.org{}>)\n"\
+                    .format(s_name[1], " ".join(s_name[4:-1]), s.a["href"])
+            else:
+                s = "**Part {}** of the **{}** series (<https://archiveofourown.org{}>)\n"\
+                    .format(s_name[1], " ".join(s_name[3:]), s.a["href"])
             output += s
     if fandoms:
         fandoms = list(map(lambda x: x.string, fandoms.find_all("a")))
@@ -172,9 +186,13 @@ def generate_ao3_series_summary(link):
     r = requests.get(link, headers=HEADERS)
     if r.status_code != requests.codes.ok:
         return ""
-    if r.url == "https://archiveofourown.org/users/login?restricted=true":
-        return ""
     soup = BeautifulSoup(r.text, "lxml")
+    if r.url == "https://archiveofourown.org/users/login?restricted=true":
+        ao3_session = AO3.Session(config.AO3_USERNAME, config.AO3_PASSWORD)
+        soup = ao3_session.request(link)
+        locked_fic = True
+    else:
+        locked_fic = False
 
     title = soup.find("h2", class_="heading").string.strip()
     preface = soup.find(class_="series meta group")
@@ -204,11 +222,14 @@ def generate_ao3_series_summary(link):
     complete = next_field.find_next_sibling("dd").string
 
     # format output
-    output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
+    if not locked_fic:
+        output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
+    else:
+        output = ":lock: **{}** (<{}>) by **{}**\n".format(title, link, author)
     if description:
         output += "**Description:** {}\n".format(description)
-    if notes:
-        output += "**Notes:** {}\n".format(notes)
+    # if notes:
+    #     output += "**Notes:** {}\n".format(notes)
     output += "**Begun:** {} **Updated:** {}\n".format(begun, updated)
     output += "**Words:** {} **Works:** {} **Complete:** {}\n\n".format(
         words, works, complete)
@@ -349,8 +370,8 @@ def generate_sb_summary(link):
     updated = metadata["updated"].replace("T", " ")
 
     output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
-    if summary:
-        output += "**Summary:** {}\n".format(summary)
+    # if summary:
+    #     output += "**Summary:** {}\n".format(summary)
     if complete == "complete":
         chapters = str(chapters) + "/" + str(chapters)
     else:

@@ -9,6 +9,10 @@ token = "your-discord-bot-token-goes-here"
 # Discord username – this is printed out as contact information
 name = "username#1234"
 
+# AO3 username and password for getting archive-locked works
+AO3_USERNAME = ""
+AO3_PASSWORD = ""
+
 # Server IDs where the ability for anyone to delete bot messages is disabled
 servers_no_deletion = set([123456789012345678, 234567890123456789])
 
