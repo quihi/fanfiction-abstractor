@@ -194,7 +194,7 @@ def generate_ao3_series_summary(link):
     else:
         locked_fic = False
 
-    title = soup.find("h2", class_="heading").string.strip()
+    title = soup.find("h2", class_="heading").text.strip()
     preface = soup.find(class_="series meta group")
     next_field = preface.dd
     author = ", ".join(map(lambda x: x.string, next_field.find_all("a")))

@@ -1,3 +1,4 @@
+ao3-api==2.3.0
 beautifulsoup4==4.9.3
 cloudscraper==1.2.58
 discord.py==1.7.2
