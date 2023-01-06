@@ -20,4 +20,4 @@ servers_no_deletion = set([123456789012345678, 234567890123456789])
 servers_no_reacts = set([123456789012345678, 234567890123456789])
 
 # User IDs of bots that should be ignored by the bot
-bots_ignore = set([123456789012345678])
+bots_allow = set([123456789012345678])

@@ -55,8 +55,8 @@ class Abstractor(discord.Client):
         # ignore own messages
         if message.author == self.user:
             return
-        # ignore Fanfic Rec Bot
-        if message.author.id in config.bots_ignore:
+        # ignore bots unless specifically permitted
+        if message.author.bot and not message.author.id in config.bots_allow:
             return
 
         # post a greeting if tagged
