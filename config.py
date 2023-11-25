@@ -1,4 +1,4 @@
-"""This contains configuration information specific to your bot instance.
+"""config.py contains configuration information specific to your bot instance.
 
 Do not upload this file to github!
 """
@@ -7,7 +7,7 @@ Do not upload this file to github!
 token = "your-discord-bot-token-goes-here"
 
 # Discord username – this is printed out as contact information
-name = "username#1234"
+name = "username#0000"
 
 # AO3 username and password for getting archive-locked works
 AO3_USERNAME = ""
@@ -19,5 +19,6 @@ servers_no_deletion = set([123456789012345678, 234567890123456789])
 # Server IDs where reacting to a series message to get fic info is disabled
 servers_no_reacts = set([123456789012345678, 234567890123456789])
 
-# User IDs of bots that should be ignored by the bot
+# User IDs of bots whose content should be checked for links
 bots_allow = set([123456789012345678])
+

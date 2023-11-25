@@ -3,7 +3,7 @@
 This class contains the bot's handling of discord events.
 """
 
-import cloudscraper
+# import cloudscraper
 import config
 import discord
 import logging
@@ -14,6 +14,7 @@ import traceback
 
 # Import the logger from another file
 logger = logging.getLogger('discord')
+logger2 = logging.getLogger('servers')
 
 # The regular expressions to identify AO3 and FFN links.
 # Note there may be an extra character at the beginning, due to checking
@@ -36,19 +37,21 @@ class Abstractor(discord.Client):
             owner = await self.fetch_user(guild.owner_id)
             s += "{}\t{}\t{}\t{}\n".format(
                 guild.id, guild.name, owner, guild.owner_id)
-        logger.info(s)
+        logger2.info(s)
 
     async def on_guild_join(self, guild):
         """Print a message when the bot is added to a server."""
         s = "Joined a new guild!\n"
         owner = await self.fetch_user(guild.owner_id)
         s = "\t".join((guild.id, guild.name, owner, guild.owner_id))
+        logger2.info(s)
 
     async def on_guild_remove(self, guild):
         """Print a message when the bot is removed a server."""
         s = "Removed from a guild."
         owner = await self.fetch_user(guild.owner_id)
         s = "\t".join((guild.id, guild.name, owner, guild.owner_id))
+        logger2.info(s)
 
     async def on_message(self, message):
         """Parse messages and respond if they contain a fanfiction link."""
@@ -150,9 +153,9 @@ class Abstractor(discord.Client):
                 # We can't resolve cloudflare errors
                 # but if the link was a mobile link, send the normal one
                 # should no longer happen with ficlab API
-                except cloudscraper.exceptions.CloudflareException:
-                    if mobile:
-                        output = link
+                # except cloudscraper.exceptions.CloudflareException:
+                #     if mobile:
+                #         output = link
                 except Exception:
                     logger.exception("Failed to get FFN summary")
             if len(output) > 0:
@@ -162,8 +165,10 @@ class Abstractor(discord.Client):
 
 
         # spacebattles!
+        # this is currently disabled: see the break 3 lines down from here
         sb_links = SB_MATCH.finditer(content)
         for link in sb_links:
+            break
             if num_processed >= max_links:
                 break
             else:

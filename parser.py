@@ -53,7 +53,7 @@ def generate_ao3_work_summary(link):
         link = "https://archiveofourown.org/works/{}".format(work_id)
 
     preface = soup.find(class_="preface group")
-    title = preface.h2.string.strip()
+    title = preface.h2.text.strip()
     author = preface.h3.string
     if author is None:
         author = ", ".join(map(lambda x: x.string, preface.h3.find_all("a")))
@@ -65,6 +65,7 @@ def generate_ao3_work_summary(link):
         summary = format_html(summary)
 
     tags = soup.find(class_="work meta group")
+    # print(tags)
     rating = tags.find("dd", class_="rating tags")
     category = tags.find("dd", class_="category tags")
     fandoms = tags.find("dd", class_="fandom tags")
@@ -90,8 +91,6 @@ def generate_ao3_work_summary(link):
         output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
     else:
         output = ":lock: **{}** (<{}>) by **{}**\n".format(title, link, author)
-        # AO3 has updated how they format series names now! I think they've
-        # become consistent, but this handles both fairly well.
     if series:
         series = series.find_all(class_="position")[:2]
         for s in series:
@@ -245,7 +244,7 @@ def generate_ao3_series_summary(link):
         output += "4. __{}__: <https://archiveofourown.org{}>".format(
             title.string, title["href"])
     elif len(works) > 4:
-        output += "        [and {} more works]".format(len(works) - 3)
+        output += "** **       [and {} more works]".format(len(works) - 3)
     else:
         output = output[:-1]
 
@@ -371,7 +370,7 @@ def generate_sb_summary(link):
 
     output = "**{}** (<{}>) by **{}**\n".format(title, link, author)
     # if summary:
-    #     output += "**Summary:** {}\n".format(summary)
+        # output += "**Summary:** {}\n".format(summary)
     if complete == "complete":
         chapters = str(chapters) + "/" + str(chapters)
     else:

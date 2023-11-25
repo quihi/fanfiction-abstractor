@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 
 """This is a duplicate of the Fanfic Rec Bot, but it works better.
 
@@ -20,15 +20,24 @@ import abstractor
 import config
 import discord
 import logging
+import sys
 
 
 def main():
     """Run the discord bot."""
     # set up logging
     logger = logging.getLogger('discord')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)
     handler = logging.FileHandler(
         filename='discord.log', encoding='utf-8', mode='a')
+    handler.setFormatter(logging.Formatter(
+        '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger.addHandler(handler)
+
+    logger = logging.getLogger('servers')
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler(
+        filename='servers.log', encoding='utf-8', mode='a')
     handler.setFormatter(logging.Formatter(
         '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
@@ -45,6 +54,7 @@ def main():
         intents=intents, activity=activity, description=description)
 
     # run the bot
+    print(sys.version)
     print("Completed setup!")
     client.run(config.token)
 
@@ -66,5 +76,4 @@ TODO:
 - add bookmark count for series?
 - add more info on series (fandoms, tags, etc. off author page)
   - test Lomonaaeren for that
-- ignore all bots unless explicitly allowed
 """
